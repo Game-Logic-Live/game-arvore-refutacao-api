@@ -26,7 +26,7 @@ class EstudoLivreController extends Controller
             $passo = new PassoFinalizacao($request->passo);
 
             if (!$arvore->tentativaFinalizacao($passo)) {
-                return ResponseController::json(Type::error, Action::store, $arvore->getErro());
+                return ResponseController::json(Type::error, Action::store, null, $arvore->getErro());
             }
 
             $respostaResource = new RespostaResource($jogador->token);
