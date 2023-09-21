@@ -5,7 +5,9 @@ namespace App\Http\Middleware;
 use App\Http\Controllers\Api\Action;
 use App\Http\Controllers\Api\ResponseController;
 use App\Http\Controllers\Api\Type;
+use App\LogicLive\Common\Enums\Types;
 use App\Models\Exercicio;
+use App\Models\LogicLive;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -25,6 +27,14 @@ class ExercicioHash
         if (isset($header['exerciciohash'])) {
             $hash = $header['exerciciohash'][0];
             $exercicio = Exercicio::where(['hash' =>   $hash])->first();
+
+            if (is_null($exercicio)) {
+                $exercicio = LogicLive::where(['hash' =>   $hash, 'tipo' => Types::EXERCICIO->descricao()])->first();
+
+                if (is_null($exercicio)) {
+                    return ResponseController::json(Type::notAuthentication, Action::login, null, 'exercicio não encontrado');
+                }
+            }
             $newRequest = $request->merge(['exercicio' => $exercicio ]);
             return $next($newRequest);
         }

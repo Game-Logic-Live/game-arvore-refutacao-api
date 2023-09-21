@@ -42,7 +42,7 @@ class ArvoreRefutacaoFinalizaRequest extends FormRequest
         $validator->after(function (Validator $validator) {
             $date = $validator->getData();
 
-            if (!in_array($date['passo']['resposta'], array_column(RespostaEnum::cases(), 'name'))) {
+            if (isset($date['passo']) && isset($date['passo']['resposta']) && !in_array($date['passo']['resposta'], array_column(RespostaEnum::cases(), 'name'))) {
                 $validator->errors()->add('passo.resposta', 'não é uma resposta válida');
             }
         });

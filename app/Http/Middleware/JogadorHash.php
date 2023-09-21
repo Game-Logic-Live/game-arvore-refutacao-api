@@ -25,6 +25,10 @@ class JogadorHash
         if (isset($header['jogadorhash'])) {
             $hash = $header['jogadorhash'][0];
             $jogador = Jogador::where(['token' =>   $hash])->first();
+
+            if (is_null($jogador)) {
+                return ResponseController::json(Type::notAuthentication, Action::login, null, 'jogador não encontrado');
+            }
             $newRequest = $request->merge(['jogador' => $jogador ]);
             return $next($newRequest);
         }
