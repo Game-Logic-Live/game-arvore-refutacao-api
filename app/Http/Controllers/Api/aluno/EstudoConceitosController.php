@@ -6,9 +6,9 @@ use App\Http\Controllers\Api\Action;
 use App\Http\Controllers\Api\ResponseController;
 use App\Http\Controllers\Api\Type;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\API\Aluno\EstudoConceitos\EstudoConceitosConcluirRequest;
 use App\LogicLive\Common\Models\RespostaModel;
 use App\LogicLive\Resources\RespostaResource;
+use Illuminate\Http\Request;
 use Throwable;
 
 class EstudoConceitosController extends Controller
@@ -17,7 +17,7 @@ class EstudoConceitosController extends Controller
     {
     }
 
-    public function concluir(EstudoConceitosConcluirRequest $request)
+    public function concluir(Request $request)
     {
         try {
             $exercicio = $request->exercicio;
