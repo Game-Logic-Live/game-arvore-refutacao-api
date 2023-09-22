@@ -103,13 +103,14 @@ class GeradorAutomatico extends GeradorArvore
             }
 
             if (isset($passo)) {
-                $tentativa = $this->derivar($passo);
+                if (!empty($passo->getIdsNoInsercoes())) {
+                    $tentativa = $this->derivar($passo);
 
-                if (!$tentativa->getSucesso()) {
-                    return  $tentativa;
+                    if (!$tentativa->getSucesso()) {
+                        return  $tentativa;
+                    }
+                    return $this->arvoreOtimizada();
                 }
-
-                return $this->arvoreOtimizada();
             }
         }
         return  new TentativaDerivacao([
@@ -127,6 +128,13 @@ class GeradorAutomatico extends GeradorArvore
      */
     public function piorArvore(): TentativaDerivacao
     {
+        if (is_null($this->arvore)) {
+            return new TentativaDerivacao([
+                'sucesso'  => false,
+                'mensagem' => 'Arvore não foi inicializada',
+            ]);
+        }
+
         $existe = ExisteDerivacaoPossivelDeInsercao::exec($this->arvore);
 
         if ($existe) {
@@ -164,12 +172,14 @@ class GeradorAutomatico extends GeradorArvore
             }
 
             if (isset($passo)) {
-                $tentativa = $this->derivar($passo);
+                if (!empty($passo->getIdsNoInsercoes())) {
+                    $tentativa = $this->derivar($passo);
 
-                if (!$tentativa->getSucesso()) {
-                    return  $tentativa;
+                    if (!$tentativa->getSucesso()) {
+                        return  $tentativa;
+                    }
+                    return $this->piorArvore();
                 }
-                return $this->arvoreOtimizada();
             }
         }
         return new TentativaDerivacao([

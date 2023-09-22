@@ -164,6 +164,8 @@ class Base
                 return false;
             }
 
+            $this->arvore = $this->geradorAutomatico->getArvore();
+
             return true;
         } catch(Exception $e) {
             return false;

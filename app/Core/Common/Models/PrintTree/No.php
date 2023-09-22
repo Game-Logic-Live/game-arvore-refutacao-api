@@ -12,7 +12,8 @@ class No extends Serializa
     protected bool $noFolha;
     protected float $posX;
     protected float $posY;
-    protected float $tmh;
+    protected float $width;
+    protected float $height;
     protected float $posXno;
     protected ?int $linhaDerivacao;
     protected float $posXlinhaDerivacao;
@@ -128,18 +129,35 @@ class No extends Serializa
     /**
      * @return float
      */
-    public function getTmh(): float
+    public function getWidth(): float
     {
-        return $this->tmh;
+        return $this->width;
     }
 
     /**
-     * @param  float $tmh
+     * @param  float $width
      * @return void
      */
-    public function setTmh(float $tmh): void
+    public function setWidth(float $width): void
     {
-        $this->tmh = $tmh;
+        $this->width = $width;
+    }
+
+    /**
+     * @return float
+     */
+    public function getHeight(): float
+    {
+        return $this->height;
+    }
+
+    /**
+     * @param  float $height
+     * @return void
+     */
+    public function setHeight(float $height): void
+    {
+        $this->height = $height;
     }
 
     /**

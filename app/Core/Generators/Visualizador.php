@@ -3,6 +3,7 @@
 namespace App\Core\Generators;
 
 use App\Core\Common\Models\Formula\Formula;
+use App\Core\Common\Models\Formula\Predicado;
 use App\Core\Common\Models\Formula\Premissa;
 use App\Core\Common\Models\PrintTree\Aresta;
 use App\Core\Common\Models\PrintTree\Arvore;
@@ -12,13 +13,16 @@ use App\Core\Common\Models\Steps\PassoInicializacao;
 use App\Core\Common\Models\Tree\No as ProcessadoresNo;
 use App\Core\Common\Models\Tree\OpcaoInicializacao;
 use App\Core\Helpers\Buscadores\EncontraNoMaisProfundo;
+use App\Core\Helpers\Buscadores\EncontraTodosNosFolha;
 use App\Http\Controllers\Controller;
 use SimpleXMLElement;
 
 class Visualizador extends Controller
 {
-    public const AREA_LINHA = 200;
-    public const AREA_NO = 100;
+    public const AREA_LINHA = 90;
+    public const DISTANCIA_Y_ENTRE_NOS = 80;
+    public const AREA_LINHA_ICONE_TICAGEM = 54;
+    public const ALTURA_NO = 40;
     private GeradorFormula $geradorFormula;
     private bool $showLines = true;
 
@@ -39,10 +43,11 @@ class Visualizador extends Controller
     public function gerarImpressaoArvore(?ProcessadoresNo $arvore, Formula $formula, float $width, bool $ticar = false, bool $fechar = false, bool $showLines = true)
     {
         $this->showLines = $showLines;
-        $tamanhoMininoCanvas = $this->larguraMinimaCanvas($formula);
+        $larguraMininoCanvas = $this->larguraMinimaCanvas($formula);
+        $alturaMininoCanvas = $this->alturaMinimaCanvas($formula);
 
-        if ($width < $tamanhoMininoCanvas) {
-            $width = $tamanhoMininoCanvas;
+        if ($width < $larguraMininoCanvas) {
+            $width = $larguraMininoCanvas;
         }
 
         if (is_null($arvore)) {
@@ -51,7 +56,7 @@ class Visualizador extends Controller
                 'arestas'   => [],
                 'linhas'    => [],
                 'width'     => $width + ($this->showLines ? self::AREA_LINHA : 0),
-                'height'    => 0,
+                'height'    => $larguraMininoCanvas,
             ]);
         }
 
@@ -63,7 +68,7 @@ class Visualizador extends Controller
             'arestas'   => $listaAresta,
             'linhas'    => $this->showLines ? $linhas : [],
             'width'     => $width + ($this->showLines ? self::AREA_LINHA : 0),
-            'height'    => 0,
+            'height'    => $alturaMininoCanvas,
         ]);
     }
 
@@ -114,33 +119,44 @@ class Visualizador extends Controller
      */
     protected function larguraMinimaCanvas(Formula $formula): float
     {
+        $maiorLargura = 0;
+
+        $premissas = $formula->getPremissas();
+
+        foreach ($premissas as $premissas) {
+            $tamanho = $this->calcularLarguraPredicado($premissas->getValorObjPremissa());
+            $maiorLargura = $maiorLargura < $tamanho ? $tamanho : $maiorLargura;
+        }
+        $conclusao = $formula->getConclusao();
+        $predicado = $conclusao->getValorObjConclusao();
+        $predicado->addNegacaoPredicado();
+        $tamanho = $this->calcularLarguraPredicado($predicado);
+        $maiorLargura = $maiorLargura < $tamanho ? $tamanho : $maiorLargura;
+
         $gerador = new GeradorAutomatico();
+        $gerador->inicializar($formula);
+        $gerador->piorArvore();
+        $arvore = $gerador->getArvore();
+        $nosFolhas = EncontraTodosNosFolha::exec($arvore);
 
-        $tentativa = $gerador->inicializar($formula);
+        return ($maiorLargura + self::AREA_LINHA_ICONE_TICAGEM) * count($nosFolhas);
+    }
 
-        if (!$tentativa->getSucesso()) {
-            return 0;
-        }
-        $arvoreIni = $tentativa->getArvore();
+        /**
+         * @param  Formula $formula
+         * @return float
+         */
+    protected function alturaMinimaCanvas(Formula $formula): float
+    {
+        $gerador = new GeradorAutomatico();
+        $gerador->inicializar($formula);
+        $gerador->piorArvore();
+        $arvore = $gerador->getArvore();
 
-        $nosProfundoInici = EncontraNoMaisProfundo::exec($arvoreIni);
-        $profundidadeArvInicializada = empty($nosProfundoInici) ? 0 : $nosProfundoInici[0]->getLinhaNo();
+        $noMaisProfundo = EncontraNoMaisProfundo::exec($arvore);
+        $ultimaLinha = $noMaisProfundo[0]->getLinhaNo();
 
-        $tentativa = $gerador->piorArvore();
-
-        if (!$tentativa->getSucesso()) {
-            return 0;
-        }
-
-        $arvore = $tentativa->getArvore();
-
-        $nosProfundoPiorArvore = EncontraNoMaisProfundo::exec($arvore);
-        $profundidadePiorArvore = empty($nosProfundoPiorArvore) ? 0 : $nosProfundoPiorArvore[0]->getLinhaNo();
-
-        //A profundidade Final considera apenas 1 dos noós inicias, pois eles nunca são bifurcados, e portanto não interferem na largura final da Arv
-        $profundidadeFinal = ($profundidadePiorArvore - $profundidadeArvInicializada) + 1;
-
-        return self::AREA_NO * $profundidadeFinal ;
+        return  (self::DISTANCIA_Y_ENTRE_NOS + 5) * $ultimaLinha;
     }
 
     /**
@@ -191,30 +207,30 @@ class Visualizador extends Controller
      */
     protected function imprimirNos(ProcessadoresNo $arvore, float $width, float $posX, float $posY, bool $ticar, bool $fechar, array $listaNosVisualizadores = []): array
     {
-        $posYFilho = $posY + 80;
-        $str = $this->geradorFormula->stringArg($arvore->getValorNo());
-        $tmh = strlen($str) <= 4 ? 40 : (strlen($str) >= 18 ? strlen($str) * 6 : strlen($str) * 8.5);
+        $posYFilho = $posY + self::DISTANCIA_Y_ENTRE_NOS;
+        $tmh = $this->calcularLarguraPredicado($arvore->getValorNo());
 
         $utilizado = $ticar == false ? $arvore->isTicado() : $arvore->isUtilizado();
         $fechado = $fechar == false ? $arvore->isFechamento() : $arvore->isFechado();
 
         $no = new VizualizadoresNo([
-            'str'                => $str,
-            'idNo'               => $arvore->getIdNo(),
-            'linha'              => $arvore->getLinhaNo(),
-            'noFolha'            => $arvore->isNoFolha(),
-            'posX'               => $posX + ($this->showLines ? self::AREA_LINHA : 0),
-            'posY'               => $posYFilho,
-            'tmh'                => $tmh,
-            'posXno'             => $posX - ($tmh / 2) + ($this->showLines ? self::AREA_LINHA : 0),
-            'linhaDerivacao'     => $arvore->getLinhaDerivacao(),
-            'posXlinhaDerivacao' => $posX + ($tmh / 2) + ($this->showLines ? self::AREA_LINHA : 0),
-            'utilizado'          => $utilizado,
-            'fechado'            => $fechado,
-            'linhaContradicao'   => $arvore->getLinhaContradicao(),
-            'fill'               => 'url(#grad1)',
-            'strokeWidth'        => 2,
-            'strokeColor'        => '#C0C0C0',
+            'str'                  => $this->geradorFormula->stringArg($arvore->getValorNo()),
+            'idNo'                 => $arvore->getIdNo(),
+            'linha'                => $arvore->getLinhaNo(),
+            'noFolha'              => $arvore->isNoFolha(),
+            'posX'                 => $posX + ($this->showLines ? self::AREA_LINHA : 0),
+            'posY'                 => $posYFilho,
+            'width'                => $tmh,
+            'height'               => self::ALTURA_NO,
+            'posXno'               => $posX - ($tmh / 2) + ($this->showLines ? self::AREA_LINHA : 0),
+            'linhaDerivacao'       => $arvore->getLinhaDerivacao(),
+            'posXlinhaDerivacao'   => $posX + ($tmh / 2) + ($this->showLines ? self::AREA_LINHA : 0),
+            'utilizado'            => $utilizado,
+            'fechado'              => $fechado,
+            'linhaContradicao'     => $arvore->getLinhaContradicao(),
+            'fill'                 => 'url(#grad1)',
+            'strokeWidth'          => 2,
+            'strokeColor'          => '#C0C0C0',
         ]);
         array_push($listaNosVisualizadores, $no);
 
@@ -255,12 +271,18 @@ class Visualizador extends Controller
                     new Linha([
                         'texto'  => 'Linha ' . $no->getLinha(),
                         'numero' => $no->getLinha(),
-                        'posX'   => 30,
+                        'posX'   => 5,
                         'posY'   => $no->getPosY() + 5,
                     ])
                 );
             }
         }
         return $listaLinhas;
+    }
+
+    protected function calcularLarguraPredicado(Predicado $predicado)
+    {
+        $str = $this->geradorFormula->stringArg($predicado);
+        return strlen($str) <= 4 ? 40 : (strlen($str) >= 18 ? strlen($str) * 6 : strlen($str) * 8.5);
     }
 }

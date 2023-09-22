@@ -21,7 +21,9 @@ class EncontraNoSemBifucacao
         $ramoDireito = $arvore->getFilhoDireitaNo();
 
         if ($arvore->getValorNo()->getTipoPredicado() == PredicadoTipoEnum::CONJUNCAO and $arvore->getValorNo()->getNegadoPredicado() == 0 and $arvore->isUtilizado() == false) {
+            return $arvore;
         } elseif (in_array($arvore->getValorNo()->getTipoPredicado(), [PredicadoTipoEnum::DISJUNCAO, PredicadoTipoEnum::CONDICIONAL]) and $arvore->getValorNo()->getNegadoPredicado() == 1 and $arvore->isUtilizado() == false) {
+            return $arvore;
         } else {
             if (!is_null($ramoCentro) and is_null($noSemBifucacao)) {
                 $noSemBifucacao = self::exec($ramoCentro);

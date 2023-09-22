@@ -28,9 +28,12 @@ class AplicadorRegras
             $aleatorias = array_slice($inteseccao, 0, $qntdRestante);
             $selecionadas = [...$possibilidades, ...$aleatorias];
         } elseif (count($possibilidades) > $qtdRegras) {
-            $selecionadas = array_rand($possibilidades, $qtdRegras);
+            shuffle($possibilidades);
+            $selecionadas = array_slice($possibilidades, 0, $qtdRegras);
+        } else {
+            shuffle($possibilidades);
+            $selecionadas = $possibilidades;
         }
-        shuffle($selecionadas);
 
         return  array_reduce(
             $selecionadas,
