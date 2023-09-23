@@ -129,7 +129,6 @@ class Visualizador extends Controller
         }
         $conclusao = $formula->getConclusao();
         $predicado = $conclusao->getValorObjConclusao();
-        $predicado->addNegacaoPredicado();
         $tamanho = $this->calcularLarguraPredicado($predicado);
         $maiorLargura = $maiorLargura < $tamanho ? $tamanho : $maiorLargura;
 
@@ -156,7 +155,7 @@ class Visualizador extends Controller
         $noMaisProfundo = EncontraNoMaisProfundo::exec($arvore);
         $ultimaLinha = $noMaisProfundo[0]->getLinhaNo();
 
-        return  (self::DISTANCIA_Y_ENTRE_NOS + 5) * $ultimaLinha;
+        return  ((self::DISTANCIA_Y_ENTRE_NOS + 5) * $ultimaLinha) + self::DISTANCIA_Y_ENTRE_NOS;
     }
 
     /**

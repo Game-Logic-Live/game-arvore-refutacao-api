@@ -8,7 +8,7 @@ class EncontraNoMaisProfundo
 {
     /**
      * Realiza uma busca na arvore por todos os NOS folhas
-     * e retorna todos aqueles que estão no nivel mais baixo
+     * e retorna os mais profundos
      * @param  No    $arvore
      * @param  array $listaDeNo -> Utilizado para busca recursiva
      * @return No[]
@@ -20,16 +20,17 @@ class EncontraNoMaisProfundo
         $ramoDireito = $arvore->getFilhoDireitaNo();
 
         if (is_null($ramoDireito) and is_null($ramoEsquerdo) and is_null($ramoCentro)) {
-            $listaDeNo = empty($listaDeNo)
-            ? [$arvore]
-            : array_reduce(
+            array_push($listaDeNo, $arvore);
+            $listaDeNo = array_reduce(
                 $listaDeNo,
-                function (array $carry, No $newNo) {
-                    $menores = array_filter($carry, function (No $NoOfList) use ($newNo) {
-                        return $NoOfList->getLinhaNo() < $newNo->getLinhaNo();
-                    });
-                    $carry = array_diff($menores, $carry);
-                    array_push($carry, $newNo);
+                function (array $carry, No $no) {
+                    if (empty($carry)) {
+                        array_push($carry, $no);
+                    } elseif ($carry[0]->getLinhaNo() < $no->getLinhaNo()) {
+                        $carry = [$no];
+                    } elseif ($carry[0]->getLinhaNo() == $no->getLinhaNo()) {
+                        array_push($carry, $no);
+                    }
                     return $carry;
                 },
                 []
