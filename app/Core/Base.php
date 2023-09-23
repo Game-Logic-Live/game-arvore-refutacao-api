@@ -121,6 +121,9 @@ class Base
     public function arvoreOtimizada(): bool
     {
         try {
+            $this->fechados->setAutomatico(true);
+            $this->ticados->setAutomatico(true);
+
             $tentativa = $this->geradorAutomatico->inicializar($this->formula);
 
             if (!$tentativa->getSucesso()) {
@@ -150,6 +153,9 @@ class Base
     public function piorArvore(): bool
     {
         try {
+            $this->fechados->setAutomatico(true);
+            $this->ticados->setAutomatico(true);
+
             $tentativa = $this->geradorAutomatico->inicializar($this->formula);
 
             if (!$tentativa->getSucesso()) {
