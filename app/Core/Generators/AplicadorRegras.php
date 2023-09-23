@@ -65,7 +65,7 @@ class AplicadorRegras
             $array = self::possibilidades($arvore->getFilhoDireitaNo(), $array);
         }
 
-        return  $array;
+        return array_unique($array, SORT_REGULAR);
     }
 
     /**
