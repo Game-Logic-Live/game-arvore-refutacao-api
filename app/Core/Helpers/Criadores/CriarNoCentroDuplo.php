@@ -39,9 +39,11 @@ class CriarNoCentroDuplo
             $primeiroNo->setLinhaNo($noInsercao->getLinhaNo() + 2);
             $segundoNo->setLinhaNo($noInsercao->getLinhaNo() + 1);
             $noInsercao->getFilhoCentroNo()->getFilhoCentroNo()->fecharRamo($contradicaoPrim->getLinhaNo());
-        } elseif ((!is_null($contradicaoPrim) and is_null($contradicaoSeg)) or (is_null($contradicaoPrim) and !is_null($contradicaoSeg))) {
+        } elseif (is_null($contradicaoPrim) and !is_null($contradicaoSeg)) {
             $primeiroNo->setLinhaNo($noInsercao->getLinhaNo() + 1);
             $segundoNo->setLinhaNo($noInsercao->getLinhaNo() + 2);
+            $noInsercao->getFilhoCentroNo()->getFilhoCentroNo()->fecharRamo($contradicaoSeg->getLinhaNo());
+        } elseif (!is_null($contradicaoPrim) and !is_null($contradicaoSeg)) {
             $noInsercao->getFilhoCentroNo()->getFilhoCentroNo()->fecharRamo($contradicaoSeg->getLinhaNo());
         } else {
             $primeiroNo->setLinhaNo($noInsercao->getLinhaNo() + 1);
